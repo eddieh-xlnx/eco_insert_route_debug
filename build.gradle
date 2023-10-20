@@ -1,0 +1,51 @@
+/*
+ * Copyright (C) 2023, Advanced Micro Devices, Inc.  All rights reserved.
+ *
+ * Author: Eddie Hung, AMD
+ *
+ * SPDX-License-Identifier: MIT
+ *
+ */
+
+// Specify this is a Java project
+plugins {
+    id 'java-library'
+}
+
+dependencies {
+    api 'com.xilinx.rapidwright:rapidwright:2023.1.4'
+}
+
+repositories {
+    mavenCentral()
+}
+
+sourceSets {
+    main {
+        // Source code to be taken from the src/ subdirectory
+        java {
+            srcDirs = ['src']
+        }
+    }
+}
+
+task run(type: JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    main = System.getProperty('main')
+}
+
+task fatJar(type: Jar) {
+    manifest {
+        attributes "Main-Class": System.getProperty('main', '')
+    }
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    from sourceSets.main.output
+    dependsOn configurations.runtimeClasspath
+    from {
+        configurations.runtimeClasspath.findAll { it.name.endsWith('.jar') }.collect { zipTree(it) }
+    }
+    archiveName System.getProperty('main') + '.jar'
+    destinationDirectory = rootDir
+}
+
